@@ -29,7 +29,7 @@ function Logger(name, log_func = show_debug_message) constructor
     /// @argument {String} text The message to log.
     log = function(type, text)
     {
-		if (type < _log_level)
+		if (type < LogLevel)
         {
             return;
         }
