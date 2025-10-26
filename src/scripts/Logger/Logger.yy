@@ -6,7 +6,7 @@
   "name":"Logger",
   "parent":{
     "name":"Logging",
-    "path":"folders/Extensions/GMUtilities/Logging.yy",
+    "path":"folders/Extensions/GMUtilities/Scripts/Logging.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

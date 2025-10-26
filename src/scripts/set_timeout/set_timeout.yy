@@ -6,7 +6,7 @@
   "name":"set_timeout",
   "parent":{
     "name":"Timers",
-    "path":"folders/Extensions/GMUtilities/Timers.yy",
+    "path":"folders/Extensions/GMUtilities/Scripts/Timers.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

@@ -1,7 +1,8 @@
 /// @description Represents a network server.
+/// @param {Constant.SocketType} type The socket type.
 /// @param {Real} port The port number.
 /// @param {Real} max_clients The maximum number of client connections.
-function Server(port, max_clients) constructor
+function Server(type, port, max_clients) constructor
 {
 	/// @type {Struct.Logger}
 	/// @description The logger.
@@ -9,7 +10,7 @@ function Server(port, max_clients) constructor
 	
 	/// @type {Id.Socket}
 	/// @description The underlying server socket.
-	_server = network_create_server_raw(network_socket_ws, port, max_clients);
+	_server = network_create_server_raw(type, port, max_clients);
 
 	/// @type {Struct}
 	/// @description The socket identifier to client connection map. 
@@ -61,11 +62,6 @@ function Server(port, max_clients) constructor
 	/// @description Cleanup resources.
 	cleanup = function()
 	{
-		struct_foreach(_socket_to_connection_map, function(connection)
-		{
-			connection.cleanup();
-		});
-		
 		network_destroy(_server);
 	}
 }

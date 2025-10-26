@@ -1,5 +1,6 @@
 /// @description Represents a network client.
-function Client() constructor
+/// @param {Constant.SocketType} type The socket type.
+function Client(type) constructor
 {
 	/// @type {Struct.Logger}
 	/// @description The logger.
@@ -7,7 +8,7 @@ function Client() constructor
 	
 	/// @type {Id.Socket}
 	/// @description The underlying network socket.
-	_socket = network_create_socket(network_socket_ws);
+	_socket = network_create_socket(type);
 
 	/// @type {Id.Buffer}
 	/// @description The buffer used to send messages through the socket.

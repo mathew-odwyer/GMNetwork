@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"Macros",
   "parent":{
-    "name":"GMUtilities",
-    "path":"folders/Extensions/GMUtilities.yy",
+    "name":"Scripts",
+    "path":"folders/Extensions/GMUtilities/Scripts.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

@@ -24,7 +24,7 @@ function JsonRpcClientProtocol(send) constructor
 	/// @description Sends a JSON-RPC 2.0 notification to the server.
 	/// @param {String} procedure The procedure to send to the server.
 	/// @param {Struct} params To the parameteres of the procedure to send to the server.
-	notify = function(procedure, params)
+	notify = function(procedure, params = {})
 	{
 		var payload = {
 			jsonrpc: "2.0",
@@ -40,7 +40,7 @@ function JsonRpcClientProtocol(send) constructor
 	/// @param {Struct} params To the parameteres of the procedure to send to the server.
 	/// @param {Real} timeout_delay The number of seconds to pass before rejecting the `Struct.Promise`.
 	/// @returns {Struct.Promise} Returns the `Promise` associated with the call.
-	call = function(procedure, params, timeout_delay = 5)
+	call = function(procedure, params = {}, timeout_delay = 5)
 	{
 		static rpc_id = 0;
 		rpc_id++;

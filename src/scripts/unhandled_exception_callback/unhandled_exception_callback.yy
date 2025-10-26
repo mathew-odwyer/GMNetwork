@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"Error",
+  "%Name":"unhandled_exception_callback",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"Error",
+  "name":"unhandled_exception_callback",
   "parent":{
     "name":"Errors",
     "path":"folders/Extensions/GMUtilities/Scripts/Errors.yy",

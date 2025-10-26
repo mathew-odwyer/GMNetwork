@@ -6,7 +6,7 @@
   "name":"Promise",
   "parent":{
     "name":"Promises",
-    "path":"folders/Extensions/GMUtilities/Promises.yy",
+    "path":"folders/Extensions/GMUtilities/Scripts/Promises.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
