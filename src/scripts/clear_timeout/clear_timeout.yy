@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"RpcError",
+  "%Name":"clear_timeout",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"RpcError",
+  "name":"clear_timeout",
   "parent":{
-    "name":"Errors",
-    "path":"folders/Extensions/GMNetwork/Scripts/Protocols/Errors.yy",
+    "name":"Timers",
+    "path":"folders/Extensions/GMUtilities/Timers.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

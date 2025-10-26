@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"Server",
+  "%Name":"set_timeout",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"Server",
+  "name":"set_timeout",
   "parent":{
-    "name":"Network",
-    "path":"folders/Extensions/GMNetwork/Scripts/Network.yy",
+    "name":"Timers",
+    "path":"folders/Extensions/GMUtilities/Timers.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

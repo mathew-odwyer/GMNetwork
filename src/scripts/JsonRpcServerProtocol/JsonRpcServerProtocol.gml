@@ -10,21 +10,21 @@ function JsonRpcServerProtocol(server) constructor
 	/// @description The server instance.
 	_server = server;
 	
-	/// @type {Id.DsMap}
+	/// @type {Struct}
 	/// @description The request/promise to requset handler map.
-	_request_to_handler_map = ds_map_create();
+	_request_to_handler_map = {};
 	
 	/// @description Registers a JSON-RPC 2.0 request handler.
 	/// @param {String} procedure The procedure (or 'method') the register.
 	/// @param {Function} callback The function to execute when the method is received.
 	register = function(procedure, callback)
 	{
-		_logger.log(log_type.debug, $"Registering JSON-RPC 2.0 Request Handler for '{procedure}'...");
-		_request_to_handler_map[? procedure] = callback;
+		_logger.log(log_type.information, $"Registering request handler for '{procedure}'...");
+		_request_to_handler_map[$ procedure] = callback;
 	}
 	
 	/// @description Sends a JSON-RPC 2.0 notification to the specified `connection`.
-	/// @param {Struct.ClientConnection} connection The connection to receive the notification.
+	/// @param {Struct.ClientConnection} connection The connection to send the notification through.
 	/// @param {String} procedure The procedure to send to the `connection`.
 	/// @param {Struct} params The parameters of the procedure to send to the `connection`
 	notify = function(connection, procedure, params)
@@ -36,20 +36,6 @@ function JsonRpcServerProtocol(server) constructor
 		};
 		
 		connection.send(payload);
-	}
-	
-	/// @description Broadcasts a JSON-RPC 2.0 notification to all connections.
-	/// @param {String} procedure The procedure to broadcast.
-	/// @param {Struct} params The parameters of the procedure to broadcast.
-	broadcast = function(procedure, params)
-	{
-		var payload = {
-			jsonrpc: "2.0",
-			method: procedure,
-			params: params,
-		};
-		
-		_server.broadcast(payload);
 	}
 	
 	/// @description Handles an incoming `payload` from the specified `socket`.
@@ -106,7 +92,7 @@ function JsonRpcServerProtocol(server) constructor
 			return;
         }
 		
-		var handler = _request_to_handler_map[? procedure];
+		var handler = _request_to_handler_map[$ procedure];
 
 		if (is_undefined(handler))
 		{
@@ -127,8 +113,7 @@ function JsonRpcServerProtocol(server) constructor
 		
 		try
 		{
-			// TODO: Test this notify, broadcast, connection and rpc_id
-			var result = method({self, connection, rpc_id}, handler)(params);
+			var result = handler(params, connection);
 			
 			if (!is_instanceof(result, Promise))
 			{
@@ -146,39 +131,24 @@ function JsonRpcServerProtocol(server) constructor
 				if (is_request)
 				{
 					result
-						// TODO: Test this notify, broadcast, connection and rpc_id
-						.next(method({self, connection, rpc_id}, function(value) {
+						.next(method({notify, connection, rpc_id}, function(value) {
 							connection.send({
 								jsonrpc: "2.0",
 								id: rpc_id,
 								result: value,
 							});
 						}))
-						// TODO: Test this notify, broadcast, connection and rpc_id
-						.fail(method({self, connection, rpc_id}, function(error) {
-							if (!is_instanceof(error, RpcError))
-							{
-								_logger.log(log_type.error, $"Internal server error: {error}");
-					
-								connection.send({
-									jsonrpc: "2.0",
-									id: rpc_id,
-									error: {
-										code: -32603,
-										message: "Internal Error",
-									},
-								});
-					
-								return;
-							}
-				
+						.fail(method({notify, connection, rpc_id}, function(error) {
 							connection.send({
 								jsonrpc: "2.0",
 								id: rpc_id,
 								error: {
-									code: -32000,
-									message: instanceof(error),
-									data: error,
+									code: error[$ "code"] ?? -32000,
+									message: error[$ "message"] ?? "Internal Server Error",
+									data: error[$ "data"] ?? {
+										detail: "An unexpected error occurred. Please try again later.",
+										errors: [],
+									},
 								},
 							});
 						}));
@@ -189,38 +159,21 @@ function JsonRpcServerProtocol(server) constructor
 		{
 			if (is_request)
 			{
-				if (!is_instanceof(ex, RpcError))
-				{
-					_logger.log(log_type.error, $"Internal server error: {ex.message}");
-					
-					connection.send({
-						jsonrpc: "2.0",
-						id: rpc_id,
-						error: {
-							code: -32603,
-							message: "Internal Error",
-						},
-					});
-					
-					return;
-				}
-				
 				connection.send({
 					jsonrpc: "2.0",
 					id: rpc_id,
 					error: {
 						code: -32000,
-						message: instanceof(ex),
-						data: ex,
+						message: "Internal Server Error",
+						data: {
+							detail: "An unexpected error occurred. Please try again later.",
+							errors: [],
+						},
 					},
 				});
 			}
+			
+			throw ex;
 		}
-	}
-	
-	/// @description Cleanup resources.
-	cleanup = function()
-	{
-		ds_map_destroy(_request_to_handler_map);
 	}
 }

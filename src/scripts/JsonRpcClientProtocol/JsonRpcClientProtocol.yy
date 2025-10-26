@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"JsonRpcClientProtocol",
   "parent":{
-    "name":"Errors",
-    "path":"folders/Extensions/GMNetwork/Scripts/TCP/Errors.yy",
+    "name":"JsonRpc",
+    "path":"folders/Extensions/GMNetwork/Scripts/Network/Protocols/JsonRpc.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

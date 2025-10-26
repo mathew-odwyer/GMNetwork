@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"Promises",
+  "%Name":"Macros",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"Promises",
+  "name":"Macros",
   "parent":{
-    "name":"Promises",
-    "path":"folders/Extensions/GMCore/Scripts/Promises.yy",
+    "name":"GMUtilities",
+    "path":"folders/Extensions/GMUtilities.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"StateMachine",
+  "%Name":"Promise",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"StateMachine",
+  "name":"Promise",
   "parent":{
-    "name":"States",
-    "path":"folders/Extensions/GMCore/Scripts/States.yy",
+    "name":"Promises",
+    "path":"folders/Extensions/GMUtilities/Promises.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

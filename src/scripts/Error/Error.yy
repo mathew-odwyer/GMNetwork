@@ -6,7 +6,7 @@
   "name":"Error",
   "parent":{
     "name":"Errors",
-    "path":"folders/Extensions/GMCore/Scripts/Errors.yy",
+    "path":"folders/Extensions/GMUtilities/Errors.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

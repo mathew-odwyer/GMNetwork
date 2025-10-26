@@ -6,7 +6,7 @@
   "name":"EventAggregator",
   "parent":{
     "name":"Events",
-    "path":"folders/Extensions/GMCore/Scripts/Events.yy",
+    "path":"folders/Extensions/GMUtilities/Events.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

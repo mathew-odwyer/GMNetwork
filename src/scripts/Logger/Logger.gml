@@ -10,19 +10,20 @@ enum log_type
 };
 
 /// @description Represents a logger.
-/// @argument {String} name The `name` of the instance that is logging.
-/// @argument {Function} log_func The function used when logging.
-function Logger(name, log_func = show_debug_message) constructor
+/// @param {String} name The name of the instance logging.
+function Logger(name) constructor
 {
+    /// @type {Enum.log_type}
+    /// @description The logging level.
 	static LogLevel = log_type.debug;
-
-    /// @type {String}
-    /// @description The name of the instance or struct.
-    _name = name;
 
     /// @type {Function}
     /// @description The function used when logging.
-    _log_func = log_func;
+    static LogFunction = show_debug_message;
+	
+	/// @type {String}
+	/// @description The name of the instance logging.
+	_name = name;
 
     /// @description Logs a message.
     /// @argument {Enum.log_type} type The type of message to log.
@@ -34,15 +35,7 @@ function Logger(name, log_func = show_debug_message) constructor
             return;
         }
 		
-        _log_func($"[{_get_log_type(LogLevel)}]: [{_name}]: {text}");
-    }
-
-    /// @description Converts the specified `type` to a readable `string`.
-    /// @argument {Enum.log_type} type The log type to convert.
-    /// @returns {String} The specified `type` converted to a readable `string`.
-    _get_log_type = function(type)
-    {
-        static type_to_name_map = [
+		static _type_to_name_map = [
 		    [log_type.trace, "Trace"],
             [log_type.debug, "Debug"],
             [log_type.information, "Information"],
@@ -50,7 +43,7 @@ function Logger(name, log_func = show_debug_message) constructor
             [log_type.error, "Error"],
             [log_type.critical, "Critical"],
         ];
-
-        return type_to_name_map[type][1];
+        
+        LogFunction($"[{_type_to_name_map[type][1]}] [{_name}]: {text}");
     }
 }

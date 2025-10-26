@@ -1,19 +1,24 @@
-function JsonRpcClientProtocol(client) constructor
+function JsonRpcClientProtocol(send) constructor
 {
-	/// @type {Struct.Client}
-	/// @description The client.
-	_client = client;
+	/// @type {Struct.Logger}
+	/// @description The logger.
+	static _logger = new Logger(nameof(JsonRpcClientProtocol));
+	
+	/// @type {Function}
+	/// @description The function used to send messages.
+	_send = send;
 	
 	/// @type {Id.DsMap}
 	/// @description The command/request to handler map.
-	_command_to_handler_map = ds_map_create();
+	_command_to_handler_map = {};
 	
 	/// @description Registers a JSON-RPC 2.0 notification handler.
 	/// @param {String} procedure The procedure to register.
 	/// @param {Function} callback The callback to execute when the notification arrives.
 	register = function(procedure, callback)
 	{
-		_command_to_handler_map[? procedure] = callback;
+		_logger.log(log_type.information, $"Registering notification handler for: '{procedure}'...");
+		_command_to_handler_map[$ procedure] = callback;
 	}
 	
 	/// @description Sends a JSON-RPC 2.0 notification to the server.
@@ -26,19 +31,36 @@ function JsonRpcClientProtocol(client) constructor
 			method: procedure,
 			params: params,
 		};
-		
-		_client.send(payload);
+	
+		_send(payload);
 	}
 	
 	/// @description Sends a JSON-RPC 2.0 request to the server.
 	/// @param {String} procedure The procedure to send to the server.
 	/// @param {Struct} params To the parameteres of the procedure to send to the server.
-	call = function(procedure, params)
+	/// @param {Real} timeout_delay The number of seconds to pass before rejecting the `Struct.Promise`.
+	/// @returns {Struct.Promise} Returns the `Promise` associated with the call.
+	call = function(procedure, params, timeout_delay = 5)
 	{
 		static rpc_id = 0;
 		rpc_id++;
 		
 		var promise = new Promise();
+		var timeout = set_timeout(method({promise}, function() {
+			promise.reject(new Error("The request timed out."));
+		}), timeout_delay);
+		
+		promise
+			.next(method({timeout}, function(result)
+			{
+				clear_timeout(timeout);
+				return result;
+			}))
+			.fail(method({timeout}, function(error)
+			{
+				clear_timeout(timeout);
+				throw error;
+			}));
 		
 		var payload = {
 			jsonrpc: "2.0",
@@ -47,8 +69,8 @@ function JsonRpcClientProtocol(client) constructor
 			params: params,
 		};
 		
-		_client.send(payload);
-		_command_to_handler_map[? rpc_id] = promise;
+		_command_to_handler_map[$ rpc_id] = promise;
+		_send(payload);
 		
 		return promise;
 	}
@@ -65,7 +87,7 @@ function JsonRpcClientProtocol(client) constructor
 		}
 		catch (ex)
 		{
-			show_debug_message("Error: Received malformed JSON from server.");
+			_logger.log(log_type.error, "Received malformed JSON from server.");
 			return;
 		}
 		
@@ -74,21 +96,21 @@ function JsonRpcClientProtocol(client) constructor
 		
 		if (is_undefined(jsonrpc) || jsonrpc != "2.0")
         {
-            show_debug_message("Error: Received message with invalid/missing jsonrpc field; ignoring.");
+            _logger.log(log_type.error, "Received message with invalid/missing jsonrpc field; ignoring.");
             return;
         }
 		
 		if (!is_undefined(rpc_id))
 		{
-			var promise = _command_to_handler_map[? rpc_id];
+			var promise = _command_to_handler_map[$ rpc_id];
 			
 			if (is_undefined(promise))
 			{
-				show_debug_message($"Error: Failed to locate request handler for ID: '{rpc_id}'");
+				_logger.log(log_type.error, $"Failed to locate request handler for ID: '{rpc_id}'");
 				return;
 			}
 			
-			ds_map_delete(_command_to_handler_map, rpc_id);
+			struct_remove(_command_to_handler_map, rpc_id);
 			
 			if (is_instanceof(promise, Promise))
 			{
@@ -97,13 +119,11 @@ function JsonRpcClientProtocol(client) constructor
 				
 				if (!is_undefined(result))
 				{
-					// TODO: Test this notify, call, etc.
-					method(self, promise.resolve)(result);
+					promise.resolve(result);
 				}
 				else if (!is_undefined(error))
 				{
-					// TODO: Test this notify, call, etc.
-					method(self, promise.reject)(error);
+					promise.reject(error);
 				}
 			}
 		}
@@ -114,23 +134,16 @@ function JsonRpcClientProtocol(client) constructor
 		
 			if (!is_undefined(procedure))
 			{
-				var handler = _command_to_handler_map[? procedure];
+				var handler = _command_to_handler_map[$ procedure];
 			
 				if (is_undefined(handler))
 				{
-					show_debug_message($"Error: Failed to locate handler for procedure: '{procedure}'");
+					_logger.log(log_type.error, $"Failed to locate handler for procedure: '{procedure}'");
 					return;
 				}
-			
-				// TODO: Test this notify, call, etc.
-				method(self, handler)(params);
+				
+				handler(params);
 			}	
 		}
-	}
-	
-	/// @description Cleanup resources.
-	cleanup = function()
-	{
-		ds_map_destroy(_command_to_handler_map);
 	}
 }

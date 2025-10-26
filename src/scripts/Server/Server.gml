@@ -5,15 +5,15 @@ function Server(port, max_clients) constructor
 {
 	/// @type {Struct.Logger}
 	/// @description The logger.
-	_logger = new Logger(nameof(Server));
+	static _logger = new Logger(nameof(Server));
 	
 	/// @type {Id.Socket}
 	/// @description The underlying server socket.
-	_server = network_create_server(network_socket_tcp, port, max_clients);
+	_server = network_create_server_raw(network_socket_ws, port, max_clients);
 
-	/// @type {Id.DsMap<Real, Struct.ClientConnection>}
+	/// @type {Struct}
 	/// @description The socket identifier to client connection map. 
-	_socket_to_connection_map = ds_map_create();
+	_socket_to_connection_map = {};
 	
 	if (_server < 0)
 	{
@@ -28,9 +28,9 @@ function Server(port, max_clients) constructor
 	add_connection = function(socket)
 	{
 		var connection = new ClientConnection(socket);
-		ds_map_add(_socket_to_connection_map, socket, connection);
+		_socket_to_connection_map[$ string(socket)] = connection;
 		
-		_logger.log(log_type.debug, $"Socket connected with ID: '{socket}'!");
+		_logger.log(log_type.information, $"Socket connected with ID: '{socket}'!");
 		
 		return connection;
 	}
@@ -39,14 +39,14 @@ function Server(port, max_clients) constructor
 	/// @param {Id.Socket} socket The socket identifier used to remove the client connection.
 	remove_connection = function(socket)
 	{
-		var connection = _socket_to_connection_map[? socket];
+		var connection = _socket_to_connection_map[$ string(socket)];
 		
 		if (!is_undefined(connection))
 		{
-			connection.disconnect();
-			ds_map_delete(_socket_to_connection_map, socket);
+			connection.cleanup();
+			struct_remove(_socket_to_connection_map, string(socket));
 			
-			_logger.log(log_type.debug, $"Socket disconnected with ID: '{socket}'");
+			_logger.log(log_type.information, $"Socket disconnected with ID: '{socket}'");
 		}
 	}
 	
@@ -55,34 +55,17 @@ function Server(port, max_clients) constructor
 	/// @returns {Struct.ClientConnection} Returns the client connection associated with the `socket`.
 	get_connection = function(socket)
 	{
-		return _socket_to_connection_map[? socket];
-	}
-	
-	/// @description Broadcasta a `message` to all registered connections.
-	/// @param {String} message The message to send to all connected clients.
-	broadcast = function(message)
-	{
-		var connections = ds_map_values_to_array(_socket_to_connection_map);
-		
-		_logger.log(log_type.trace, $"Broadcasting message: '{message}'");
-		
-		for (var i = 0; i < array_length(connections); i++)
-		{
-			connections[i].send(message);
-		}
+		return _socket_to_connection_map[$ string(socket)];
 	}
 
 	/// @description Cleanup resources.
 	cleanup = function()
 	{
-		var connections = ds_map_values_to_array(_socket_to_connection_map);
-		
-		array_foreach(connections, function(connection)
+		struct_foreach(_socket_to_connection_map, function(connection)
 		{
-			connection.disconnect();
+			connection.cleanup();
 		});
 		
-		ds_map_destroy(_socket_to_connection_map);
 		network_destroy(_server);
 	}
 }

@@ -1,9 +1,10 @@
 /// @description Represents the eventual completion (or failure) of an asynchronous operation and its resulting value.
+/// @param {Real} timeout The amount of time to pass in milliseconds before the promise is rejected.
 function Promise() constructor
 {
-	/// @type {Struct.Logger}
-	/// @description The logger.
-	static _logger = new Logger(nameof(Promise));
+	/// @type {Function}
+	/// @description A global handler for unhandled rejections.
+	static UnhandledRejectionCallback = undefined;
 	
 	/// @type {String}
 	/// @description The current state of the promise.
@@ -13,14 +14,18 @@ function Promise() constructor
 	/// @description The resolve value or rejection reason.
     _value = undefined;
 	
-	/// @type {Array}
-	/// @description The collection of resolution links.
-    _resolve_chain = [];
+	/// @type {Struct.Promise|Undefined}
+	/// @description The parent.
+	_parent = undefined;
 	
 	/// @type {Array}
-	/// @description The collection of rejection links.
-    _reject_chain = [];
-
+	/// @description The handlers of the promise.
+	_handlers = [];
+	
+	/// @type {Bool}
+	/// @description Indicates whether the promise has been rejected and handled.
+	_handled = false;
+	
     /// @description Attempts to resolve the `Promise` with the specified `value`.
     /// @param {Any} value The value used during resolution.
     resolve = function(value)
@@ -34,22 +39,23 @@ function Promise() constructor
         _value = value;
         _state = "resolved";
 
-		var chain = _resolve_chain;
+		var chain = _handlers;
 		var length = array_length(chain);
 
         for (var i = 0; i < length; i++)
         {
             var link = chain[i];
             var promise = link.promise;
-            var callback = link.callback;
+            var callback = link.fulfilled;
 
             try
             {
                 var result = callback(_value);
-
-				// If the result is another promise, chain it.
+				
+				/// @feather ignore GM1041
                 if (is_instanceof(result, Promise))
                 {
+					// If the result is another promise, chain it.
                     result
                         .next(method({promise}, function(value)
 						{
@@ -57,18 +63,19 @@ function Promise() constructor
 						}))
                         .fail(method({promise}, function(error)
 						{
+							promise._handled = true;
 							promise.reject(error);
 						}));
                 }
                 else
                 {
-					// Otherwise, it's not async so just resolve.
+					 // No fulfilled (synchronous); forward value to child.
                     promise.resolve(result);
                 }
             }
-            catch (error)
+            catch (ex)
             {
-                promise.reject(error);
+                promise.reject(ex);
             }
         }
     }
@@ -86,25 +93,21 @@ function Promise() constructor
         _value = value;
         _state = "rejected";
 		
-		var chain = _reject_chain;
+		var chain = _handlers;
 		var length = array_length(chain);
-		
-		if (length == 0)
-		{
-			_logger.log(log_type.warning, $"Unhandled Rejection: '{_value}'");
-		}
 
         for (var i = 0; i < length; i++)
         {
             var link = chain[i];
             var promise = link.promise;
-            var callback = link.callback;
+            var callback = link.rejected;
 
             try
             {
                 var result = callback(_value);
 
 				// If the result is another promise, chain it.
+				/// @feather ignore GM1041
                 if (is_instanceof(result, Promise))
                 {
                     result
@@ -114,12 +117,14 @@ function Promise() constructor
 						}))
                         .fail(method({promise}, function(error)
 						{
+							promise._handled = true;
 							promise.reject(error);
 						}));
                 }
                 else
                 {
                     // error handler returned a non-promise so let's treat it as resolved.
+					// No rejected (synchronous); forward value to child.
                     promise.resolve(result);
                 }
             }
@@ -128,6 +133,37 @@ function Promise() constructor
                 promise.reject(err);
             }
         }
+		
+		// If no .fail() ever handled this, call global unhandled rejection
+	    if (!is_undefined(UnhandledRejectionCallback))
+	    {
+			var this = self;
+			
+			call_later(1, time_source_units_frames, method({this, _value}, function()
+			{
+				if (this._handled)
+				{
+					return;
+				}
+				
+				// Walk ancestors to see if any parent has been marked handled
+				var current = this._parent;
+				
+				while (!is_undefined(current))
+		        {
+		            if (current._handled)
+					{
+						// If we have handnled it already, forget about it.
+						return;
+					}
+					
+		            current = current._parent;
+		        }
+				
+				// Finally, it must be unhandled.
+				Promise.UnhandledRejectionCallback(_value);
+			}));
+	    }
     }
 
     /// @description Registers a callback to be invoked when the `Promise` is resolved.
@@ -136,21 +172,14 @@ function Promise() constructor
     next = function(callback)
     {
         var promise = new Promise();
+		promise._parent = self;
 		
-        var link = {
-			promise: promise,
-			callback: callback
-		};
-
         if (_state == "pending")
         {
-			// If we're pending, just push to the array and wait until it's complete.
-            array_push(_resolve_chain, link);
-			
-			// Forward the unhandled error if none is provided.
-			array_push(_reject_chain, {
+			array_push(_handlers, {
 				promise: promise,
-				callback: function(reason) {
+				fulfilled: callback,
+				rejected: function(reason) {
 					promise.reject(reason);
 				}
 			});
@@ -172,6 +201,7 @@ function Promise() constructor
 						}))
                         .fail(method({promise}, function(error)
 						{
+							promise._handled = true;
 							promise.reject(error);
 						}));
                 }
@@ -183,12 +213,14 @@ function Promise() constructor
             }
             catch (err)
             {
+				promise._handled = true;
                 promise.reject(err);
             }
         }
         else if (_state == "rejected")
         {
 			// If we've already rejected and synchronous just reject.
+			promise._handled = true;
             promise.reject(_value);
         }
 
@@ -201,23 +233,16 @@ function Promise() constructor
     fail = function(callback)
     {
         var promise = new Promise();
+		promise._parent = self;
 		
-        var link = {
-			promise: promise,
-			callback: callback
-		};
-
         if (_state == "pending")
         {
-            // If we're pending, just push to the array and wait until it's complete.
-            array_push(_reject_chain, link);
-			
-			// // Forward the unhandled success if none is provided.
-			array_push(_resolve_chain, {
+			array_push(_handlers, {
 				promise: promise,
-				callback: function(value) {
+				fulfilled: function(value) {
 					promise.resolve(value);
-				}
+				},
+				rejected: callback
 			});
         }
         else if (_state == "rejected")
@@ -230,8 +255,15 @@ function Promise() constructor
                 if (is_instanceof(result, Promise))
                 {
                     result
-                        .next(method({promise}, function(value) { promise.resolve(value); }))
-                        .fail(method({promise}, function(e) { promise.reject(e); }));
+                        .next(method({promise}, function(value)
+						{
+							promise.resolve(value);
+						}))
+                        .fail(method({promise}, function(error)
+						{
+							promise._handled = true;
+							promise.reject(error);
+						}));
                 }
                 else
                 {
@@ -241,16 +273,26 @@ function Promise() constructor
             }
             catch (err)
             {
+				promise._handled = true;
                 promise.reject(err);
             }
-        }
+        }	
         else if (_state == "resolved")
         {
 			// Resolve synchronously if already resolved.
             promise.resolve(_value);
         }
-
+		
+		var current = self;
+		
+		while (!is_undefined(current))
+		{
+			current._handled = true;
+			current = current._parent;
+		}
+		
         return promise;
     }
 }
 
+new Promise();
