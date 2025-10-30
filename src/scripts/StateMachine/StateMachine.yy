@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"set_timeout",
+  "%Name":"StateMachine",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"set_timeout",
+  "name":"StateMachine",
   "parent":{
-    "name":"Timers",
-    "path":"folders/Extensions/GMUtilities/Scripts/Timers.yy",
+    "name":"States",
+    "path":"folders/Extensions/GMUtilities/Scripts/States.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

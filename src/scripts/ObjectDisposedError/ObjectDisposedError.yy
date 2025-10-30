@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"unhandled_exception_callback",
+  "%Name":"ObjectDisposedError",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"unhandled_exception_callback",
+  "name":"ObjectDisposedError",
   "parent":{
     "name":"Errors",
     "path":"folders/Extensions/GMUtilities/Scripts/Errors.yy",

@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"Promise",
+  "%Name":"TimeoutError",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"Promise",
+  "name":"TimeoutError",
   "parent":{
-    "name":"Promises",
-    "path":"folders/Extensions/GMUtilities/Scripts/Promises.yy",
+    "name":"Errors",
+    "path":"folders/Extensions/GMUtilities/Scripts/Errors.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

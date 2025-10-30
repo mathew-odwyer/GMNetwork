@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"clear_timeout",
+  "%Name":"generate_uuid",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"clear_timeout",
+  "name":"generate_uuid",
   "parent":{
-    "name":"Timers",
-    "path":"folders/Extensions/GMUtilities/Scripts/Timers.yy",
+    "name":"Security",
+    "path":"folders/Extensions/GMUtilities/Scripts/Security.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
